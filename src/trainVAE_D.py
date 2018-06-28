@@ -13,12 +13,12 @@ from PreTrainDs import indexData2variable
 import time
 
 
-def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False):
+def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False,pretrainVAE=False):
     
-    gan = torch.load(sys.argv[6])
+    gan = torch.load(sys.argv[7])
     gan = gan.cuda()
     style = StyleData()
-    style.load(sys.argv[5])
+    style.load(sys.argv[6])
     const = Constants(style.n_words)
     optimizer = optim.Adam(gan.parameters(),lr=const.Lr)
     lamda1 = 1
@@ -71,10 +71,15 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False):
                     Lrec = cross_entropy(dic['x1_hat_noT'],seqs[0])+cross_entropy(dic['x2_hat_noT'],seqs[1])
                     Lcyc = cross_entropy(dic['x1_bar_noT'],seqs[0])+cross_entropy(dic['x2_bar_noT'],seqs[1])
                     emb = ds_emb(seqs[0]).unsqueeze(0).unsqueeze(0)
-                    Ldis = (ds_model(emb)[0][1]*(dic['y1']-dic['y_star'])**2).sum()
+                    if not pretrainVAE:
+                        Ldis = (ds_model(emb)[0][1]*(dic['y1']-dic['y_star'])**2).sum()
                     
-                    Ladv = cross_entropy(dic['D_x1_wl'],Variable(torch.LongTensor([0]).cuda())) + cross_entropy(dic['D_x2_hat'],Variable(torch.LongTensor([1]).cuda()))
-                    Loss += Lrec + lamda2*Lcyc + lamda3*Ldis - lamda1*Ladv
+                    if not pretrainVAE:
+                        Ladv = cross_entropy(dic['D_x1_wl'],Variable(torch.LongTensor([0]).cuda())) + cross_entropy(dic['D_x2_hat'],Variable(torch.LongTensor([1]).cuda()))
+                    Loss += Lrec + lamda2*Lcyc
+                    
+                    if not pretrainVAE:
+                        Loss += lamda3*Ldis - lamda1*Ladv
             else:
                 for seqs in tempdata:
                     dic = gan(seqs[0],seqs[1],Ez_train=False,Ey_train=False,G_train=False,
@@ -97,10 +102,10 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False):
             acc = get_d_acc(gan, train_data)
             gan.train(True)
             
-            if acc > 0.8:
-                pretrainD = False
-            if acc < 0.6:
-                pretrainD = True
+#             if acc > 0.8:
+#                 pretrainD = False
+#             if acc < 0.6:
+#                 pretrainD = True
             
             
             
@@ -148,10 +153,10 @@ if __name__ == "__main__":
     
     """
     you shuld use this script in this way:
-    python trainVAE_D.py <epoches> <batch_size> <pretrainD?> <traindatafilename>  <styledatafilename> ganName
+    python trainVAE_D.py <epoches> <batch_size> <pretrainD?> <pretrainVAE?> <traindatafilename>  <styledatafilename> ganName
 
     for instance: 
-    python trainVAE_D.py 1000 20 yes/no ./data/trainDataOfIndex.npy ./data/style ./Model/gan.pkl
+    python trainVAE_D.py 1000 20 yes/no yes/no ./data/trainDataOfIndex.npy ./data/style ./Model/gan.pkl
     """
     
     booldic = {'yes':True,
@@ -168,12 +173,13 @@ if __name__ == "__main__":
     ds = torch.load('./Model/Ds.pkl').cuda()
     ds_emb = torch.load('./Model/Ds_emb.pkl').cuda()
     
-    train_data = np.load(sys.argv[4])
+    train_data = np.load(sys.argv[5])
     epoches = int(sys.argv[1])
     batch_size = int(sys.argv[2])
     pretrainD = booldic[sys.argv[3]]
+    pretrainVAE = booldic[sys.argv[5]]
     
 
-    trainVAE_D(epoches,batch_size,train_data,ds,ds_emb,pretrainD)
+    trainVAE_D(epoches,batch_size,train_data,ds,ds_emb,pretrainD,pretrainVAE)
     
     print "finished trainning......................."

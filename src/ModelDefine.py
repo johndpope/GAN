@@ -82,6 +82,11 @@ class EzModel(nn.Module):
         self.gru = nn.GRU(embedding_size, hidden_size)
         # the GRU's output is special, 'hidden_out' of every time step excatly
         self.relu = nn.ReLU()
+        for weights in self.gru.all_weights:
+            for w in weights:
+                if w.ndimension() < 2:
+                    continue
+                nn.init.orthogonal(w,gain=1)
 
     def forward(self, x, hidden):
         """
@@ -160,6 +165,12 @@ class GModel(nn.Module):
         self.out = nn.Linear(self.hidden_size, n_vocab)
         self.softmax = nn.Softmax(dim=-1)
         self.relu = nn.ReLU()
+        
+        for weights in self.gru.all_weights:
+            for w in weights:
+                if w.ndimension() < 2:
+                    continue
+                nn.init.orthogonal(w,gain=1)
 
     def forward(self, x, hidden):
         """
@@ -377,6 +388,8 @@ class GANModel(nn.Module):
         x_hats_noT.append(x_hat_noT)
         hiddens.append(hidden)
         
+        zero_flag = False
+        
         for i in range(1, seq_len):
 
             embedd_x_hat = self.embedding(x_hat, index=False)
@@ -385,9 +398,15 @@ class GANModel(nn.Module):
             # the sequence's length be generated should be larger than 6 at least 
             if x_hat.topk(1)[1].data.cpu().numpy() == 1 and not length_fix and i >= self.min_len:
                 break
-
+                    
+                    
+                    
             x_hats.append(x_hat)
             x_hats_noT.append(x_hat_noT)
             hiddens.append(hidden)
+            
+            x_hat = x_hat.detach()
+            x_hat_noT = x_hat_noT.detach()
+            hidden = hidden.detach()
 
         return torch.cat(x_hats), torch.cat(x_hats_noT), torch.cat(hiddens)  # cat in the first dim
