@@ -1,5 +1,7 @@
 # coding: utf-8
 import sys
+sys.path.append('../')
+import getopt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,18 +9,18 @@ import torch.optim as optim
 from torch.autograd import Variable
 import numpy as np
 import random 
-from Constant import Constants
-from load_data import StyleData
-from PreTrainDs import indexData2variable
+from src.Constant import Constants
+from util.load_data import StyleData
+from src.PreTrainDs import indexData2variable
 import time
 
 
 def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False,pretrainVAE=False):
     
-    gan = torch.load(sys.argv[7])
+    gan = torch.load(gan_path)
     gan = gan.cuda()
     style = StyleData()
-    style.load(sys.argv[6])
+    style.load(style_path)
     const = Constants(style.n_words)
     optimizer = optim.Adam(gan.parameters(),lr=const.Lr)
     lamda1 = 1
@@ -96,7 +98,7 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False,pretrainV
             
             
         if i%10 == 0 or i:
-            torch.save(gan, "./Model/gan.pkl")
+            torch.save(gan, gan_path)
                 
             gan.eval()
             acc = get_d_acc(gan, train_data)
@@ -111,7 +113,7 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False,pretrainV
             
         etime = time.time()
         print "cost time \t%.2f mins" % ((etime - stime)/60)
-    torch.save(gan, "./Model/gan.pkl")
+    torch.save(gan, gan_path)
             
                 
 def build2pairs(train_data):
@@ -158,26 +160,34 @@ if __name__ == "__main__":
     for instance: 
     python trainVAE_D.py 1000 20 yes/no yes/no ./data/trainDataOfIndex.npy ./data/style ./Model/gan.pkl
     """
+    opts, agrvs = getopt.getopt(sys.argv[1:], "", ["epoches=", "batch_size=", "pretrainD", "pretrainVAE", "traindata=", "style=", "gan=", "ds=", "ds_emb="])
+    pretrainD = False
+    pretrainVAE = False
+    for op in opts:
+        if "--epoches" in op:
+            epoches = int(op[1])
+        if "--batch_size" in op:
+            batch_size = int(op[1])
+        if "--pretrainD" in op:
+            pretrainD = True
+        if "--pretrainVAE" in op:
+            pretrianVAE = True
+        if "--traindata" in op:
+            traindata = op[1]
+        if "--style" in op:
+            style_path = op[1]
+        if "--gan" in op:
+            gan_path = op[1]
+        if "--ds" in op:
+            ds_path = op[1]
+        if "--ds_emb" in op:
+            ds_emb_path = op[1]
+            
     
-    booldic = {'yes':True,
-                'y':True,
-                'Y':True,
-                'Yes':True,
-                'YES':True,
-                'no':False,
-                'N':False,
-                'n':False,
-                'NO':False,
-                'No':False,}
+    ds = torch.load(ds_path).cuda()
+    ds_emb = torch.load(ds_emb_path).cuda()
     
-    ds = torch.load('./Model/Ds.pkl').cuda()
-    ds_emb = torch.load('./Model/Ds_emb.pkl').cuda()
-    
-    train_data = np.load(sys.argv[5])
-    epoches = int(sys.argv[1])
-    batch_size = int(sys.argv[2])
-    pretrainD = booldic[sys.argv[3]]
-    pretrainVAE = booldic[sys.argv[5]]
+    train_data = np.load(traindata)
     
 
     trainVAE_D(epoches,batch_size,train_data,ds,ds_emb,pretrainD,pretrainVAE)

@@ -1,11 +1,12 @@
+import sys
+sys.path.append('../')
 import numpy as np
 from io import open
 import re
 import string
 import random
-from Constant import Constants
+from src.Constant import Constants
 from load_data import data2index, StyleData
-
 
 def readfile(filename):
     con = Constants(100)
@@ -28,14 +29,14 @@ def saveTrainData(filenames):
     trtdata = readfile(trtname)
     datapairs = [srcdata, trtdata]
     style = StyleData(datapairs)
-    style.save('./traindata/style')
+    style.save('../traindata/style')
     datapairs = data2index(datapairs, style)
     datapairs = np.array(datapairs)
-    np.save('./traindata/trainDataOfIndex', datapairs)
+    np.save('../traindata/trainDataOfIndex', datapairs)
     return
 
 
 if __name__ == "__main__":
-    filenames = ['./data/yelp/sentiment.train.0', './data/yelp/sentiment.train.1']
+    filenames = ['../traindata/yelp/sentiment.train.0', '../traindata/yelp/sentiment.train.1']
     saveTrainData(filenames)
     print("finished")

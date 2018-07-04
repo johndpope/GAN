@@ -1,20 +1,31 @@
 # coding: utf-8
+import sys
+sys.path.append('../')
 import numpy as np
 import random
 import torch
-from Constant import Constants
-from ModelDefine import GANModel
-from load_data import StyleData
-from PreTrainDs import indexData2variable
-
+from src.Constant import Constants
+from src.ModelDefine import GANModel
+from util.load_data import StyleData
+from src.PreTrainDs import indexData2variable
+import getopt
 
 
 
 
 if __name__ == "__main__":
     # this is just to build the gan model and save the network to use later
+    opt, args = getopt.getopt(sys.argv[1:],"s:o:",["style=", "output="])
+#    print opt, args
+    for op in opt:
+#	print op
+        if "--style" in op:
+            style_path = op[1]
+        if "--output" in op:
+            output = op[1]
+            
     style = StyleData()
-    style.load('./traindata/style')
+    style.load(style_path)
     const = Constants(n_vocab=style.n_words)
     gan = GANModel(content_represent=const.Content_represent,
                    D_filters=const.D_filters,
@@ -25,5 +36,5 @@ if __name__ == "__main__":
                    n_vocab=const.N_vocab,
                    style_represent=const.Style_represent,
                    temper=const.Temper)  # there are 9 parameters of a GAN
-    torch.save(gan, './Model/gan.pkl')
+    torch.save(gan, output)
     print 'finished'

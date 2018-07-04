@@ -1,5 +1,6 @@
 # coding: utf-8
-
+import sys
+sys.path.append('../')
 import matplotlib.pyplot as plt
 import torch 
 import torch.nn as nn
@@ -7,12 +8,11 @@ import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
 import random
-from Constant import Constants
-from load_data import StyleData
+from src.Constant import Constants
+from util.load_data import StyleData
 from torch.autograd import Variable
 from ModelDefine import DsModel
 from ModelDefine import Embed
-import sys
 import time
 
 def train(epoches, batch_size, train_data):
@@ -31,8 +31,8 @@ def train(epoches, batch_size, train_data):
             nowloss = getclfloss(train_data,ds,criterion)
             nowacc = getclfacc(train_data)
             
-            torch.save(ds,'./Model/Ds.pkl')
-            torch.save(embedding,'./Model/Ds_emb.pkl')
+            torch.save(ds,sys.argv[4])
+            torch.save(embedding,sys.argv[5])
             
             ds.train()
             embedding.train()
