@@ -1,3 +1,19 @@
 138091
 epoches:	0
 trainning Generator..............
+acc:		 0.5000
+cost time 	309.52 mins
+epoches:	1
+trainning Generator..............
+acc:		 0.5000
+cost time 	302.14 mins
+epoches:	2
+trainning Generator..............
+acc:		 0.5000
+cost time 	304.51 mins
+epoches:	3
+trainning Generator..............
+acc:		 0.5000
+cost time 	302.81 mins
+epoches:	4
+trainning Generator..............

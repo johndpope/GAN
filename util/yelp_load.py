@@ -29,10 +29,10 @@ def saveTrainData(filenames):
     trtdata = readfile(trtname)
     datapairs = [srcdata, trtdata]
     style = StyleData(datapairs)
-    style.save('../traindata/style')
+    style.save('../traindata/yelp_style')
     datapairs = data2index(datapairs, style)
     datapairs = np.array(datapairs)
-    np.save('../traindata/trainDataOfIndex', datapairs)
+    np.save('../traindata/yelp_trainDataOfIndex', datapairs)
     return
 
 
